@@ -166,3 +166,7 @@ fn test_squiggle() {
     assert!(token_uri.is_ok());
 }
 }
+
+
+//deployed code at address: 0xab8e440727a38bbb180f7032ca4a8009e7b52b80
+//deployment tx hash: 0xa7c5522440377c7dc30abd3f771c1d05c3d707508ba8cd18c6d88d0019da6b06
