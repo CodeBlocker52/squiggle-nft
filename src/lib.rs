@@ -1,5 +1,7 @@
 #![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
 #![cfg_attr(not(any(test, feature = "export-abi")), no_std)]
+mod base64;
+mod generator;
 
 #[macro_use]
 extern crate alloc;
@@ -69,8 +71,13 @@ impl From<erc721::Error> for SquiggleError {
 
 impl Squiggle {
     fn generate_seed(&self) -> FixedBytes<32> {
-        todo!()
-    }
+    let block_number = self.vm().block_number();
+    let msg_sender = self.vm().msg_sender();
+    let chain_id = self.vm().chain_id();
+    let hash_data = (block_number, msg_sender, chain_id).abi_encode_sequence();
+
+    keccak(&hash_data)
+}
 }
 
 /// Declare that `Squiggle` is a contract with the following external methods.
@@ -79,7 +86,8 @@ impl Squiggle {
 impl Squiggle {
     #[constructor]
     fn constructor(&mut self, mint_price: U256) -> Result<(), SquiggleError> {
-        todo!()
+        self.mint_price.set(mint_price);
+        Ok(())
     }
 
     fn name(&self) -> String {
@@ -90,15 +98,39 @@ impl Squiggle {
         String::from("SQGL")
     }
 
-    #[selector(name = "tokenURI")]
-    fn token_uri(&self, token_id: U256) -> Result<String, SquiggleError> {
-        todo!()
+   #[selector(name = "tokenURI")]
+fn token_uri(&self, token_id: U256) -> Result<String, SquiggleError> {
+    let seed = self.seeds.get(token_id);
+    let generator = generator::SquiggleGenerator::new(seed);
+    let metadata = generator.metadata();
+
+    Ok(metadata)
+}
+
+#[payable]
+fn mint(&mut self) -> Result<(), SquiggleError> {
+    let msg_value = self.vm().msg_value();
+    let mint_price = self.mint_price.get();
+    let minter = self.vm().msg_sender();
+
+    // If the user doesn't send enough ETH, return an error.
+    if msg_value < mint_price {
+        return Err(SquiggleError::InsufficientPayment(InsufficientPayment {}));
     }
 
-    #[payable]
-    fn mint(&mut self) -> Result<(), SquiggleError> {
-        todo!()
-    }
+    // Generate a random seed
+    let seed = self.generate_seed();
+
+    // Update the total supply and set the seed in storage for this Token ID
+    let token_id = self.total_supply.get();
+    self.seeds.setter(token_id).set(seed);
+    self.total_supply.set(token_id + U256::ONE);
+
+    // Mint the actual token to the user via Erc721
+    self.erc721._mint(minter, token_id)?;
+
+    Ok(())
+}
 }
 
 #[cfg(test)]
@@ -108,12 +140,29 @@ mod test {
     #[no_mangle]
     pub unsafe extern "C" fn emit_log(_pointer: *const u8, _len: usize, _: usize) {}
 
-    #[test]
-    fn test_squiggle() {
-        use stylus_sdk::testing::*;
-        let vm = TestVM::default();
-        let mut contract = Squiggle::from(&vm);
+   #[test]
+fn test_squiggle() {
+    use stylus_sdk::testing::*;
+    let vm = TestVM::default();
+    let mut contract = Squiggle::from(&vm);
 
-        todo!()
-    }
+    let result = contract.constructor(U256::from(100));
+    assert!(result.is_ok());
+
+    let mint_price = contract.mint_price.get();
+    assert_eq!(mint_price, U256::from(100));
+
+    let result = contract.mint();
+    assert!(result.is_err());
+
+    vm.set_value(U256::from(100));
+    let result = contract.mint();
+    assert!(result.is_ok());
+
+    let total_supply = contract.total_supply.get();
+    assert_eq!(total_supply, U256::from(1));
+
+    let token_uri = contract.token_uri(U256::from(0));
+    assert!(token_uri.is_ok());
+}
 }
