@@ -1,0 +1,12 @@
+<svg width='1000' height='1000' viewBox='0 0 1000 1000' xmlns='http://www.w3.org/2000/svg'>
+<rect width="100%" height="100%" fill="#1a1a1a"/>
+<path d="M 44,500 C 66,-21 88, -21 110,500 C 122,841 134, 841 146,500 C 158,34 170, 34 183,500 C 212,754 241, 754 270,500 C 299,0 328, 0 357,500 C 381,974 405, 974 429,500 C 461,0 494, 0 527,500 C 539,831 551, 831 564,500 C 581,153 599, 153 617,500 C 638,649 659, 649 681,500 C 707,-13 733, -13 760,500 C 786,911 812, 911 839,500 C 863,157 887, 157 912,500 C 926,886 940, 886 955,500 " stroke-width="48" fill="none" stroke="url(#gradient)" stroke-linecap="round"/>
+<linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0.00%" stop-color="rgb(30, 144, 255)"/>
+<stop offset="25.00%" stop-color="rgb(0, 206, 209)"/>
+<stop offset="50.00%" stop-color="rgb(32, 178, 170)"/>
+<stop offset="75.00%" stop-color="rgb(72, 209, 204)"/>
+<stop offset="100.0%" stop-color="rgb(0, 255, 255)"/>
+</linearGradient>
+
+</svg>
